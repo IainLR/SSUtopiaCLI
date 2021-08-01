@@ -36,4 +36,16 @@ public class AdminServiceTest {
 		assertEquals(new Integer(50), adminService.readAirplaneTypes().get(0).getMaxCapacity());
 	}
 
+	@Test
+	public void readBookings() throws SQLException {
+		assertNotEquals(null, adminService.readBookings());
+		assertEquals("aaa", adminService.readBookings().get(0).getConfirmationCode());
+	}
+	
+	@Test
+	public void readFlights() throws SQLException {
+		assertNotEquals(null, adminService.readFlights());
+		assertEquals(new Integer(1), adminService.readFlights().get(0).getRouteId());
+	}
+
 }

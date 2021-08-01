@@ -15,6 +15,22 @@ public class AirportDAO extends BaseDAO<Airport> {
 		// TODO Auto-generated constructor stub
 	}
 
+	public void addAiport(Airport airport) throws ClassNotFoundException, SQLException {
+		save("INSERT INTO utopia.airport (iata_id, city) VALUES(?, ?)",
+				new Object[] { airport.getIataId(), airport.getCity() });
+	}
+
+	public void updateAiport(Airport airport, String iataId) throws ClassNotFoundException, SQLException {
+		save("UPDATE utopia.airport SET city = ?, iata_id = ? where iata_id = ?",
+				new Object[] { airport.getCity(), iataId, airport.getIataId() });
+
+	}
+
+	public void deleteAirport(Airport airport) throws ClassNotFoundException, SQLException {
+		save("DELETE FROM utopia.airport where iata_id = ? AND city = ?",
+				new Object[] { airport.getIataId(), airport.getCity() });
+	}
+
 	public List<Airport> readAllAirports() throws SQLException, ClassNotFoundException {
 
 		return read("SELECT * FROM utopia.airport", null);

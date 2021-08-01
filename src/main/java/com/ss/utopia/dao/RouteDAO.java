@@ -15,6 +15,16 @@ public class RouteDAO extends BaseDAO<Route> {
 		// TODO Auto-generated constructor stub
 	}
 
+	public Integer addRouteReturnPrimaryKey(Route route) throws SQLException, ClassNotFoundException {
+		return saveAndReturnPrimaryKey("INSERT INTO utopia.route (origin_id, destination_id)\n" + "VALUES(?, ?)",
+				new Object[] { route.getOriginId(), route.getDestinationId() });
+	}
+
+	public Route readRoutById(Integer routeId) throws ClassNotFoundException, SQLException {
+		List<Route> routes = read("SELECT * FROM utopia.route\n" + "WHERE id = ?", new Object[] { routeId });
+		return routes.get(0);
+	}
+
 	public List<Route> readAllRoutes() throws SQLException, ClassNotFoundException {
 
 		return read("SELECT * FROM utopia.route", null);

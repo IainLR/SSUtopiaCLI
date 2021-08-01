@@ -1,16 +1,42 @@
 package com.ss.utopia.domain;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 public class Flight {
 
 	private Integer id;
 	private Integer routeId;
+	private Route route;
 	private Integer airplaneId;
-//	private LocalDate departureTime;\
-	private Timestamp departureTime;
+	private Airplane airplane;
+	private LocalDateTime departureTime;
+//	private Timestamp departureTime;
 	private Integer reservedSeats;
 	private float seatPrice;
+
+	public Route getRoute() {
+		return route;
+	}
+
+	public void setRoute(Route route) {
+		this.route = route;
+	}
+
+	public Airplane getAirplane() {
+		return airplane;
+	}
+
+	public void setAirplane(Airplane airplane) {
+		this.airplane = airplane;
+	}
+
+	public LocalDateTime getDepartureTime() {
+		return departureTime;
+	}
+
+	public void setDepartureTime(LocalDateTime departureTime) {
+		this.departureTime = departureTime;
+	}
 
 	public Integer getId() {
 		return id;
@@ -36,13 +62,13 @@ public class Flight {
 		this.airplaneId = airplaneId;
 	}
 
-	public Timestamp getDepartureTime() {
-		return departureTime;
-	}
-
-	public void setDepartureTime(Timestamp timestamp) {
-		this.departureTime = timestamp;
-	}
+//	public Timestamp getDepartureTime() {
+//		return departureTime;
+//	}
+//
+//	public void setDepartureTime(Timestamp timestamp) {
+//		this.departureTime = timestamp;
+//	}
 
 	public Integer getReservedSeats() {
 		return reservedSeats;

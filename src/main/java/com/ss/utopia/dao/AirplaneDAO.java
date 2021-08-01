@@ -15,6 +15,11 @@ public class AirplaneDAO extends BaseDAO<Airplane> {
 		// TODO Auto-generated constructor stub
 	}
 
+	public Airplane readAirplaneById(Integer airplaneId) throws ClassNotFoundException, SQLException {
+		List<Airplane> airplanes = read("SELECT * FROM utopia.airplane WHERE id = ?", new Object[] { airplaneId });
+		return airplanes.get(0);
+	}
+
 	public List<Airplane> readAllPlanes() throws SQLException, ClassNotFoundException {
 
 		return read("SELECT * FROM utopia.airplane", null);

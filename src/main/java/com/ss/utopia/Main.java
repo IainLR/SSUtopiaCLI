@@ -3,6 +3,7 @@ package com.ss.utopia;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.ss.utopia.CLI.AdminCLI;
 import com.ss.utopia.domain.Airplane;
 import com.ss.utopia.domain.AirplaneType;
 import com.ss.utopia.domain.Airport;
@@ -47,7 +48,7 @@ public class Main {
 //			System.out.println(flight.getDepartureTime().toLocalDateTime().getHour());
 //			System.out.println(flight.getDepartureTime().toLocalDateTime().getMinute());
 //			System.out.println(flight.getDepartureTime().toLocalDateTime());
-//			System.out.println(flight.getReservedSeats());
+////			System.out.println(flight.getReservedSeats());
 //			System.out.println(flight.getSeatPrice());
 //			System.out.println(flight.getId());
 //			System.out.println(flight.getRouteId());
@@ -56,10 +57,11 @@ public class Main {
 //		}
 
 		List<Booking> bookings = adminService.readBookings();
-		for (Booking booking : bookings) {
-			System.out.println(booking.getConfirmationCode());
-		}
+//		for (Booking booking : bookings) {
+//			System.out.println(booking.getConfirmationCode());
+//		}
 
+		new AdminCLI().run();
 	}
 
 }

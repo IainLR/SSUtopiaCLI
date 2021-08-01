@@ -4,6 +4,23 @@ public class Airplane {
 
 	private Integer id;
 	private Integer airplaneTypeId;
+	private AirplaneType airplaneType;
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public AirplaneType getAirplaneType() {
+		return airplaneType;
+	}
+
+	public void setAirplaneType(AirplaneType airplaneType) {
+		this.airplaneType = airplaneType;
+	}
 
 	public Integer getid() {
 		return id;
