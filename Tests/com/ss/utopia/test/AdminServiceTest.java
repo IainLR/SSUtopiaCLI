@@ -37,13 +37,13 @@ public class AdminServiceTest {
 	}
 
 	@Test
-	public void readBookings() throws SQLException {
+	public void readBookingsTest() throws SQLException {
 		assertNotEquals(null, adminService.readBookings());
 		assertEquals("aaa", adminService.readBookings().get(0).getConfirmationCode());
 	}
-	
+
 	@Test
-	public void readFlights() throws SQLException {
+	public void readFlightsTest() throws SQLException {
 		assertNotEquals(null, adminService.readFlights());
 		assertEquals(new Integer(1), adminService.readFlights().get(0).getRouteId());
 	}

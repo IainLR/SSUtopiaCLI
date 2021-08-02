@@ -3,7 +3,7 @@ package com.ss.utopia;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.ss.utopia.CLI.AdminCLI;
+import com.ss.utopia.CLI.MainMenuCLI;
 import com.ss.utopia.domain.Airplane;
 import com.ss.utopia.domain.AirplaneType;
 import com.ss.utopia.domain.Airport;
@@ -61,7 +61,8 @@ public class Main {
 //			System.out.println(booking.getConfirmationCode());
 //		}
 
-		new AdminCLI().run();
+//		new AdminCLI().run();
+		new MainMenuCLI().run();
 	}
 
 }

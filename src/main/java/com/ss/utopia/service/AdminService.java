@@ -8,14 +8,20 @@ import com.ss.utopia.dao.AirplaneDAO;
 import com.ss.utopia.dao.AirplaneTypeDAO;
 import com.ss.utopia.dao.AirportDAO;
 import com.ss.utopia.dao.BookingDAO;
+import com.ss.utopia.dao.BookingUserDAO;
+import com.ss.utopia.dao.FlightBookingDAO;
 import com.ss.utopia.dao.FlightDAO;
 import com.ss.utopia.dao.RouteDAO;
+import com.ss.utopia.dao.UserDAO;
 import com.ss.utopia.domain.Airplane;
 import com.ss.utopia.domain.AirplaneType;
 import com.ss.utopia.domain.Airport;
 import com.ss.utopia.domain.Booking;
+import com.ss.utopia.domain.BookingUser;
 import com.ss.utopia.domain.Flight;
+import com.ss.utopia.domain.FlightBooking;
 import com.ss.utopia.domain.Route;
+import com.ss.utopia.domain.User;
 
 public class AdminService {
 
@@ -316,6 +322,28 @@ public class AdminService {
 		return null;
 	}
 
+	public Flight readFlightByBooking(Booking booking) throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+			FlightBookingDAO flightBookingDAO = new FlightBookingDAO(connection);
+			FlightBooking fBooking = flightBookingDAO.readFlightBookingByBooking(booking);
+
+			FlightDAO flightDAO = new FlightDAO(connection);
+			Flight flight = flightDAO.readFlightByFlightBooking(fBooking);
+
+			return flight;
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+		return null;
+	}
+
 	public void updateFlight(Flight flight, String departureString) throws SQLException {
 		Connection connection = null;
 		try {
@@ -355,6 +383,228 @@ public class AdminService {
 		}
 
 		return null;
+	}
+
+	public List<Booking> readCancelledBookings() throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+
+			BookingDAO bookingDAO = new BookingDAO(connection);
+			List<Booking> bookings = bookingDAO.readCancelledBookings();
+
+			return bookings;
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+		return null;
+	}
+
+	public List<String> readBookingConfCodes() throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+
+			BookingDAO bookingDAO = new BookingDAO(connection);
+			List<String> codes = bookingDAO.readBookingConfirmations();
+
+			return codes;
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+		return null;
+	}
+
+	public void addBooking(Booking booking, Flight flight, FlightBooking flightBooking, BookingUser bookingUser)
+			throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+			// save booking, return key
+			BookingDAO bookingDAO = new BookingDAO(connection);
+			int bookingInt = bookingDAO.addBookingReturnPrimaryKey(booking);
+			// update flight occupancy
+			FlightDAO flightDAO = new FlightDAO(connection);
+			flightDAO.updateFlightOccupancy(flight);
+			// set bookingId for flightBooking and bookingUser
+			flightBooking.setBookingId(bookingInt);
+			bookingUser.setBookingId(bookingInt);
+			// add flightBooking
+			FlightBookingDAO flightBookingDAO = new FlightBookingDAO(connection);
+			flightBookingDAO.addFlightBooking(flightBooking);
+			// add bookingUser
+			BookingUserDAO bookingUserDAO = new BookingUserDAO(connection);
+			bookingUserDAO.addBookingUser(bookingUser);
+
+			connection.commit();
+			System.out.println("Booking commit successful!");
+		} catch (Exception e) {
+			// TODO: handle exception
+			connection.rollback();
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+	}
+
+	public void updateBooking(Booking booking) throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+
+			BookingDAO bookingDAO = new BookingDAO(connection);
+			bookingDAO.updateBooking(booking);
+
+			connection.commit();
+		} catch (Exception e) {
+			connection.rollback();
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+	}
+
+	public void deleteBooking(Booking booking) throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+
+			BookingDAO bookingDAO = new BookingDAO(connection);
+			bookingDAO.deleteBooking(booking);
+
+			connection.commit();
+		} catch (Exception e) {
+			// TODO: handle exception
+			connection.rollback();
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+	}
+
+//	USER CRUD--------------------------------------------
+
+	public void addUser(User user) throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+
+			UserDAO userDAO = new UserDAO(connection);
+			userDAO.addUser(user);
+
+			connection.commit();
+		} catch (Exception e) {
+			connection.rollback();
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+	}
+
+	public void updateUser(User user) throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+
+			UserDAO userDAO = new UserDAO(connection);
+			userDAO.updateUser(user);
+
+			connection.commit();
+		} catch (Exception e) {
+			connection.rollback();
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+	}
+
+	public List<User> readUsersByRole(Integer roleId) throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+
+			UserDAO userDAO = new UserDAO(connection);
+			List<User> users = userDAO.readUsersByRoleId(roleId);
+
+			return users;
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+		return null;
+	}
+
+	public User readUserByBooking(Booking booking) throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+			BookingUserDAO bookingUserDAO = new BookingUserDAO(connection);
+			BookingUser bookingUser = bookingUserDAO.readBookingUserByBooking(booking);
+
+			UserDAO userDAO = new UserDAO(connection);
+			User user = userDAO.readUserByBookingUser(bookingUser);
+
+			return user;
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
+		return null;
+	}
+
+	public void deleteUser(User user) throws SQLException {
+		Connection connection = null;
+		try {
+			connection = connUtil.getConnection();
+
+			UserDAO userDAO = new UserDAO(connection);
+			userDAO.deleteUser(user);
+
+			connection.commit();
+			System.out.println("User Deleted");
+		} catch (Exception e) {
+			// TODO: handle exception
+			connection.rollback();
+			System.out.println("Error: " + e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+
 	}
 
 }

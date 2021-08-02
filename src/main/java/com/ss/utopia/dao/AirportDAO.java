@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ss.utopia.domain.Airport;
+import com.ss.utopia.domain.Route;
 
 public class AirportDAO extends BaseDAO<Airport> {
 
@@ -29,6 +30,24 @@ public class AirportDAO extends BaseDAO<Airport> {
 	public void deleteAirport(Airport airport) throws ClassNotFoundException, SQLException {
 		save("DELETE FROM utopia.airport where iata_id = ? AND city = ?",
 				new Object[] { airport.getIataId(), airport.getCity() });
+	}
+
+	public Airport readOriginAirportByRoute(Route route) throws SQLException, ClassNotFoundException {
+
+		List<Airport> airports = read("SELECT * FROM utopia.airport WHERE iata_id = ?",
+				new Object[] { route.getOriginId() });
+
+		return airports.get(0);
+
+	}
+
+	public Airport readDestinationAirportByRoute(Route route) throws SQLException, ClassNotFoundException {
+
+		List<Airport> airports = read("SELECT * FROM utopia.airport WHERE iata_id = ?",
+				new Object[] { route.getDestinationId() });
+
+		return airports.get(0);
+
 	}
 
 	public List<Airport> readAllAirports() throws SQLException, ClassNotFoundException {

@@ -3,22 +3,29 @@ package com.ss.utopia.CLI;
 import java.sql.SQLException;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 import com.ss.utopia.domain.Airplane;
 import com.ss.utopia.domain.AirplaneType;
 import com.ss.utopia.domain.Airport;
+import com.ss.utopia.domain.Booking;
+import com.ss.utopia.domain.BookingUser;
 import com.ss.utopia.domain.Flight;
+import com.ss.utopia.domain.FlightBooking;
 import com.ss.utopia.domain.Route;
+import com.ss.utopia.domain.User;
 import com.ss.utopia.service.AdminService;
 
 public class AdminCLI {
+	private static final Integer TRAVELER = 1;
+	private static final Integer EMPLOYEE = 3;
+//	private static final Integer ADMIN = 2;
 	private static Scanner scanner = new Scanner(System.in);
 	private static AdminService adminService = new AdminService();
 
 	public void run() throws SQLException {
 		initialPromp();
-//		listAirports();
 
 	}
 
@@ -39,12 +46,62 @@ public class AdminCLI {
 			} else if (userChoice == 5) {
 				crudMenu("Employees");
 			} else if (userChoice == 6) {
-				// new method?
+				overRideCancellation();
 			} else if (userChoice == 7) {
 				return;
 			}
 
 		}
+	}
+
+	private void overRideCancellation() throws SQLException {
+		List<Booking> cancelledBookings = adminService.readCancelledBookings();
+		Booking bookingSelection = new Booking();
+		int i = 1;
+		StringBuilder promptStringBuilder = new StringBuilder();
+		User user = new User();
+		Flight flight = new Flight();
+		Route route = new Route();
+		String active;
+
+		for (Booking booking : cancelledBookings) {
+			flight = adminService.readFlightByBooking(booking);
+			route = adminService.readRouteById(flight.getRouteId());
+			user = adminService.readUserByBooking(booking);
+			if (booking.getIsActive() == 1) {
+				active = "YES";
+			} else {
+				active = "NO";
+			}
+
+			promptStringBuilder.append(i).append(") \n").append("Booking ID: ").append(booking.getId()).append("\n")
+					.append("Confirmation code: ").append(booking.getConfirmationCode()).append("\n").append("Active: ")
+					.append(active).append("\n").append("Traveler: ").append(user.getGivenName()).append(" ")
+					.append(user.getFamilyName()).append("\n").append("Username: ").append(user.getUsername())
+					.append(" ").append("Email: ").append(user.getEmail()).append("\n").append("Phone: ")
+					.append(user.getPhone()).append("\n").append("Flight ID: ").append(flight.getId()).append(" ")
+					.append("departure time: ").append(flight.getDepartureTime()).append("\n").append("Route: ")
+					.append(route.getOriginId()).append("->").append(route.getDestinationId()).append("\n")
+					.append("-----------------------------------").append("\n");
+
+			i++;
+		}
+		promptStringBuilder.append(i).append(") \n").append("Quit to Previous").append("\n")
+				.append("-----------------------------------").append("\n");
+
+		int bookingChoice = getNumber(promptStringBuilder.toString(), cancelledBookings.size() + 1);
+		if (bookingChoice == cancelledBookings.size() + 1) {
+			return;
+		}
+
+		bookingSelection = cancelledBookings.get(bookingChoice - 1);
+
+		boolean yesOrNo = getYesOrNo("Are you certain you wish to override this cancelled booking?");
+		if (yesOrNo) {
+			bookingSelection.setIsActive(1);
+			adminService.updateBooking(bookingSelection);
+		}
+
 	}
 
 	private void crudMenu(String selection) throws SQLException {
@@ -55,11 +112,13 @@ public class AdminCLI {
 		if (selection.equals("Flights")) {
 			flightCrudOptions(userChoice);
 		} else if (selection.equals("Bookings")) {
-//            bookingCrudOptions(userChoice);
+			bookingCrudOptions(userChoice);
 		} else if (selection.equals("Airports")) {
 			airportCrudOptions(userChoice);
 		} else if (selection.equals("Travelers")) {
-//            publisherCrudOptions(userChoice);
+			travelersCrudOptions(userChoice);
+		} else if (selection.equals("Employees")) {
+			employeesCrudOptions(userChoice);
 		} else if (userChoice == 5) {
 			return;
 		}
@@ -95,6 +154,293 @@ public class AdminCLI {
 			System.out.println("Select an Airport you wish to DELETE \n");
 			Airport airportChoice = listAirports();
 			deleteAirport(airportChoice);
+		}
+
+	}
+
+	private void bookingCrudOptions(Integer userChoice) throws SQLException {
+		if (userChoice == 1) {
+			createBooking();
+		} else if (userChoice == 2) {
+			listBooking();
+		} else if (userChoice == 3) {
+			System.out.println("Choose a Booking to Update: \n");
+			Booking booking = listBooking();
+			updateBooking(booking);
+		} else if (userChoice == 4) {
+			System.out.println("Select a Booking you wish to DELETE \n");
+			Booking booking = listBooking();
+			deleteBooking(booking);
+		}
+	}
+
+	private void travelersCrudOptions(Integer userChoice) throws SQLException {
+		if (userChoice == 1) {
+			createTraveler(TRAVELER);
+		} else if (userChoice == 2) {
+			listUserByRoleId(TRAVELER);
+		} else if (userChoice == 3) {
+			System.out.println("Choose a User to Update: \n");
+			User user = listUserByRoleId(TRAVELER);
+			updateUser(user);
+		} else if (userChoice == 4) {
+			System.out.println("Select a User you wish to DELETE \n");
+			User user = listUserByRoleId(TRAVELER);
+			deleteUser(user);
+		}
+
+	}
+
+	private void employeesCrudOptions(int userChoice) throws SQLException {
+		if (userChoice == 1) {
+			createTraveler(EMPLOYEE);
+		} else if (userChoice == 2) {
+			listUserByRoleId(EMPLOYEE);
+		} else if (userChoice == 3) {
+			System.out.println("Choosde a flight to Update: \n");
+			User user = listUserByRoleId(EMPLOYEE);
+			updateUser(user);
+		} else if (userChoice == 4) {
+			System.out.println("Select a flight you wish to DELETE \n");
+			User user = listUserByRoleId(EMPLOYEE);
+			deleteUser(user);
+		}
+
+	}
+
+	private void deleteUser(User user) throws SQLException {
+		boolean yesOrNo = getYesOrNo("Are you certain you wish to delete user ID: " + user.getId() + "? Y/N \n");
+		if (yesOrNo) {
+			adminService.deleteUser(user);
+			return;
+		} else {
+			return;
+		}
+
+	}
+
+	private void updateUser(User user) throws SQLException {
+		boolean loop = true;
+
+		while (loop) {
+			System.out.println("Please Enter a First Name: \n");
+			String firstName = scanner.nextLine();
+			user.setGivenName(firstName);
+
+			System.out.println("Enter a Last Name: \n");
+			String lastName = scanner.nextLine();
+			user.setFamilyName(lastName);
+
+			System.out.println("Enter a Username: \n");
+			String userName = scanner.nextLine();
+			user.setUsername(userName);
+
+			System.out.println("Enter an email: \n");
+			String email = scanner.nextLine();
+			user.setEmail(email);
+
+			System.out.println("Enter a password: \n");
+			String password = scanner.nextLine();
+			user.setPassword(password);
+
+			System.out.println("Enter a phone number: \n");
+			String phone = scanner.nextLine();
+			user.setPhone(phone);
+
+			boolean yesOrNo = getYesOrNo("Would you like to confirm this update? Y/N \n");
+			if (yesOrNo) {
+				adminService.updateUser(user);
+				return;
+			} else {
+				return;
+			}
+		}
+
+	}
+
+	private void createTraveler(Integer role) throws SQLException {
+		User user = new User();
+		user.setRoleId(role);
+		boolean loop = true;
+
+		while (loop) {
+			System.out.println("Please Enter a First Name: \n");
+			String firstName = scanner.nextLine();
+			user.setGivenName(firstName);
+
+			System.out.println("Enter a Last Name: \n");
+			String lastName = scanner.nextLine();
+			user.setFamilyName(lastName);
+
+			System.out.println("Enter a Username: \n");
+			String userName = scanner.nextLine();
+			user.setUsername(userName);
+
+			System.out.println("Enter an email: \n");
+			String email = scanner.nextLine();
+			user.setEmail(email);
+
+			System.out.println("Enter a password: \n");
+			String password = scanner.nextLine();
+			user.setPassword(password);
+
+			System.out.println("Enter a phone number: \n");
+			String phone = scanner.nextLine();
+			user.setPhone(phone);
+
+			boolean yesOrNo = getYesOrNo("Would you like to save this new User? Y/N \n");
+			if (yesOrNo) {
+				adminService.addUser(user);
+				return;
+			} else {
+				return;
+			}
+
+		}
+
+	}
+
+	private void deleteBooking(Booking booking) throws SQLException {
+		boolean yesOrNo = getYesOrNo("Do you wish to delete your Booking with an id of: " + booking.getId());
+		if (yesOrNo) {
+//			adminService.deleteBooking(booking);
+		}
+
+	}
+
+	private void createBooking() throws SQLException {
+		// booking, set is active to 1, generate confirmation code, check uniqueness of
+		// code, get primary key
+		Booking booking = new Booking();
+		booking.setIsActive(1);
+		List<String> confCodeStrings = adminService.readBookingConfCodes();
+		boolean stringCheck = true;
+		while (stringCheck) {
+			String generatedString = generateConfirmationString();
+			boolean codeCheck = confCodeStrings.contains(generatedString);
+			if (!codeCheck) {
+				booking.setConfirmationCode(generatedString);
+				stringCheck = false;
+			}
+		}
+
+		// select flight
+		Flight flight = new Flight();
+		boolean capacityCheck = true;
+		while (capacityCheck) {
+			System.out.println("Select a Flight: \n");
+			flight = listFlights();
+			int avaliableSeats = flight.getAirplane().getAirplaneType().getMaxCapacity() - flight.getReservedSeats();
+			if (avaliableSeats > 0) {
+				capacityCheck = false;
+			} else {
+				System.out.println("That flight is at capacity, please choose another");
+			}
+		}
+		flight.setReservedSeats(flight.getReservedSeats() + 1);
+
+		// create flightBooking NEED returned booking id, can get in adminServ
+		FlightBooking flightBooking = new FlightBooking();
+		flightBooking.setFlightId(flight.getId());
+		// select user
+		System.out.println("Select a Traveler: \n");
+		User user = listUserByRoleId(TRAVELER);
+
+		// create bookingUser NEED booking id
+		BookingUser bookingUser = new BookingUser();
+		bookingUser.setUserId(user.getId());
+
+		// once saved, I will have to update the available seats on flight
+		boolean yesOrNo = getYesOrNo("Are you ready to save this Booking? Y/N \n");
+		if (yesOrNo) {
+			adminService.addBooking(booking, flight, flightBooking, bookingUser);
+		} else {
+			return;
+		}
+
+	}
+
+	private Booking listBooking() throws SQLException {
+		// get bookings, get flight, get user
+		List<Booking> bookings = adminService.readBookings();
+
+		int i = 1;
+		StringBuilder promptStringBuilder = new StringBuilder();
+		User user = new User();
+		Flight flight = new Flight();
+		Route route = new Route();
+		String active;
+
+		for (Booking booking : bookings) {
+			flight = adminService.readFlightByBooking(booking);
+			route = adminService.readRouteById(flight.getRouteId());
+			user = adminService.readUserByBooking(booking);
+			if (booking.getIsActive() == 1) {
+				active = "YES";
+			} else {
+				active = "NO";
+			}
+
+			promptStringBuilder.append(i).append(") \n").append("Booking ID: ").append(booking.getId()).append("\n")
+					.append("Confirmation code: ").append(booking.getConfirmationCode()).append("\n").append("Active: ")
+					.append(active).append("\n").append("Traveler: ").append(user.getGivenName()).append(" ")
+					.append(user.getFamilyName()).append("\n").append("Username: ").append(user.getUsername())
+					.append(" ").append("Email: ").append(user.getEmail()).append("\n").append("Phone: ")
+					.append(user.getPhone()).append("\n").append("Flight ID: ").append(flight.getId()).append(" ")
+					.append("departure time: ").append(flight.getDepartureTime()).append("\n").append("Route: ")
+					.append(route.getOriginId()).append("->").append(route.getDestinationId()).append("\n")
+					.append("-----------------------------------").append("\n");
+
+			i++;
+		}
+
+		int bookingChoice = getNumber(promptStringBuilder.toString(), bookings.size() + 1);
+		if (bookingChoice == bookings.size() + 1) {
+			return null;
+		}
+
+		return bookings.get(bookingChoice - 1);
+
+	}
+
+	private void updateBooking(Booking booking) throws SQLException {
+		boolean loop = true;
+		String codeString;
+		String active;
+		if (booking.getIsActive() == 1) {
+			active = "YES";
+		} else {
+			active = "NO";
+		}
+
+		while (loop) {
+			System.out.println("You have selected Booking ID: " + booking.getId() + "\n" + "Confirmation Code: "
+					+ booking.getConfirmationCode() + " Is Active: " + active);
+			boolean getCodeYesOrNo = getYesOrNo("Would you like to edit the confirmation code? Y/N \n");
+			if (getCodeYesOrNo) {
+				System.out.println("Enter new 5 letter confirmation code: \n");
+				codeString = scanner.nextLine();
+			} else {
+				codeString = booking.getConfirmationCode();
+			}
+			booking.setConfirmationCode(codeString);
+
+			boolean getActiveYesOrNo = getYesOrNo("Is Booking active(Y) or inactive(N)? Y/N \n");
+			if (getActiveYesOrNo) {
+				booking.setIsActive(1);
+				active = "YES";
+			} else {
+				booking.setIsActive(0);
+				active = "NO";
+			}
+
+			boolean confirmation = getYesOrNo("Confirmation code: " + booking.getConfirmationCode() + "\n"
+					+ "Is Active: " + active + "\n" + "Are these values correct? Y/N \n");
+			if (confirmation) {
+				loop = false;
+				adminService.updateBooking(booking);
+			}
+
 		}
 
 	}
@@ -231,6 +577,7 @@ public class AdminCLI {
 			flight.setAirplane(airplane);
 			AirplaneType airplaneType = adminService.readAirplaneTypeById(airplane.getAirplaneTypeId());
 			flight.getAirplane().setAirplaneType(airplaneType);
+			int avaliableSeats = airplaneType.getMaxCapacity() - flight.getReservedSeats();
 //			LocalDateTime localDateTime = flight.getDepartureTime().toLocalDateTime();
 
 			promptStringBuilder.append(i).append(") \n").append("FLight ID: ").append(flight.getId()).append("\n")
@@ -242,6 +589,7 @@ public class AdminCLI {
 					.append(flight.getDepartureTime().getHour() + ":" + flight.getDepartureTime().getMinute())
 					.append("\n").append("Airplane ID: ").append(airplane.getid()).append("\n")
 					.append("Airplane Max Capacity: ").append(airplaneType.getMaxCapacity()).append("\n")
+					.append("Avaliable seats: ").append(avaliableSeats).append("\n")
 					.append("-----------------------------------").append("\n");
 
 			i++;
@@ -407,6 +755,29 @@ public class AdminCLI {
 
 	}
 
+	private User listUserByRoleId(Integer roleId) throws SQLException {
+		List<User> users = adminService.readUsersByRole(roleId);
+
+		int i = 1;
+		StringBuilder promptStringBuilder = new StringBuilder();
+
+		for (User user : users) {
+			promptStringBuilder.append(i).append(") ").append(user.getGivenName()).append(" ")
+					.append(user.getFamilyName()).append("\n").append("Username: ").append(user.getUsername())
+					.append("\n").append("Email: ").append(user.getEmail()).append(" Phone: ").append(user.getPhone())
+					.append("\n").append("User ID: ").append(user.getId()).append("\n")
+					.append("-----------------------------------").append("\n");
+			i++;
+		}
+
+		int userChoice = getNumber(promptStringBuilder.toString(), users.size() + 1);
+		if (userChoice == users.size() + 1) {
+			return null;
+		}
+		return users.get(userChoice - 1);
+
+	}
+
 	private String setDateTime() {
 		int month = getNumber("Please Enter a Month: \n", 12);
 		YearMonth yearMonthObject = YearMonth.of(2021, month);
@@ -423,6 +794,19 @@ public class AdminCLI {
 
 		System.out.println(dateTimeStringBuilder.toString());
 		return dateTimeStringBuilder.toString();
+
+	}
+
+	private String generateConfirmationString() {
+		int leftLimit = 97; // letter 'a'
+		int rightLimit = 122; // letter 'z'
+		int targetStringLength = 5;
+		Random random = new Random();
+
+		String generatedString = random.ints(leftLimit, rightLimit + 1).limit(targetStringLength)
+				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
+
+		return generatedString;
 
 	}
 
